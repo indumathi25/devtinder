@@ -8,6 +8,7 @@ const userSchema = new mongoose.Schema(
       required: true,
       minlength: 4,
       maxlength: 50,
+      index: true, // Adding index for faster search
     },
     lastName: {
       type: String,
@@ -74,6 +75,23 @@ const userSchema = new mongoose.Schema(
   // Adds createdAt and updatedAt fields
   { timestamps: true }
 );
+
+userSchema.index({ firstName: 1, lastName: 1 }); // Compound index for name searches
+userSchema.methods.getJWT = function () {
+  const user = this;
+  const jwt = require('jsonwebtoken');
+  // Create JWT token
+  const token = jwt.sign({ _id: user._id }, 'dev_tinder_secret_key', {
+    expiresIn: '1d',
+  });
+  return token;
+};
+
+userSchema.methods.validatePassword = async function (inputPassword) {
+  const bcrypt = require('bcrypt');
+  const user = this;
+  return await bcrypt.compare(inputPassword, user.password);
+};
 
 // Creating the model
 module.exports = mongoose.model('User', userSchema);

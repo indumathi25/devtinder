@@ -30,7 +30,26 @@ function validateSkillsArray(arr) {
   return arr.length <= 10;
 }
 
+const validateEditProfileData = (req) => {
+  const allowedUpdates = [
+    'firstName',
+    'lastName',
+    'age',
+    'photoUrl',
+    'about',
+    'skills',
+  ];
+  const updates = Object.keys(req.body);
+  const isValidOperation = updates.every((update) =>
+    allowedUpdates.includes(update)
+  );
+  if (!isValidOperation) {
+    throw new Error('Invalid updates!');
+  }
+};
+
 module.exports = {
   validateSignupData,
   validateSkillsArray,
+  validateEditProfileData,
 };
