@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "3000:3000"
+    environment:
+      - MONGO_URI=mongodb+srv://indumathivelan:r4Rj9!FvN~*g@namastenode.et21s.mongodb.net/devTinder
+      # Replace with actual connection string if you want dynamic config, 
+      # but currently it's likely hardcoded or in .env (which needs to be passed)
+      # For now assuming it is set in code or .env file is copied
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
