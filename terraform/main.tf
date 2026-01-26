@@ -111,7 +111,7 @@ resource "aws_instance" "app_server" {
               cd /home/ubuntu/app
               
               # 3. Clone Repository
-              git clone https://github.com/indumathivelan/devtinder.git .
+              git clone https://github.com/indumathi25/devtinder.git .
 
               # 4. Start Application
               sudo docker compose up -d --build

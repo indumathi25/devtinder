@@ -3,7 +3,7 @@
   hosts: all
   become: yes
   vars:
-    repo_url: "https://github.com/indumathivelan/devtinder.git"
+    repo_url: "https://github.com/indumathi25/devtinder.git"
     app_dir: "/home/ubuntu/app"
 
   tasks:
