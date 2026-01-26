@@ -21,7 +21,7 @@ provider "aws" {
 
 # Create a Security Group
 resource "aws_security_group" "instance_sg" {
-  name        = "dev-tinder-sg"
+  name_prefix = "dev-tinder-sg-"
   description = "Allow SSH, HTTP, and App ports"
 
   ingress {
@@ -82,7 +82,8 @@ resource "aws_instance" "app_server" {
   ami           = data.aws_ami.ubuntu.id
   instance_type = var.instance_type
   key_name      = aws_key_pair.deployer.key_name
-  vpc_security_group_ids = [aws_security_group.instance_sg.id]
+  vpc_security_group_ids      = [aws_security_group.instance_sg.id]
+  associate_public_ip_address = true
 
   user_data = <<-EOF
               #!/bin/bash
