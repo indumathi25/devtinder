@@ -14,9 +14,8 @@ profileRouter.get('/profile', userAuth, async (req, res) => {
 
 profileRouter.patch('/profile/edit', userAuth, async (req, res) => {
   try {
-    if (validateEditProfileData(req)) {
-      throw new Error('Invalid profile data');
-    }
+    validateEditProfileData(req);
+
     const user = req.user;
     const updates = req.body;
 
@@ -28,7 +27,7 @@ profileRouter.patch('/profile/edit', userAuth, async (req, res) => {
     await user.save();
     res.json({ message: 'Profile updated successfully', user });
   } catch (error) {
-    return res.status(500).json({ message: 'Error:', error: error.message });
+    return res.status(500).json({ message: error.message });
   }
 });
 

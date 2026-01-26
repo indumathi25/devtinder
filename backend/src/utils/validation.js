@@ -37,6 +37,7 @@ const validateEditProfileData = (req) => {
     'age',
     'photoUrl',
     'about',
+    'gender',
     'skills',
   ];
   const updates = Object.keys(req.body);

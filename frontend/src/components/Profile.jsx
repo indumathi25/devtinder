@@ -23,7 +23,8 @@ const Profile = () => {
             setToast("Profile updated successfully");
             setTimeout(() => setToast(""), 3000);
         } catch (err) {
-            setToast("Error updating profile: " + err.response?.data?.message);
+            const errorMsg = err.response?.data?.message || err.response?.data?.error || err.message;
+            setToast("Error updating profile: " + errorMsg);
         }
     }
 
