@@ -21,7 +21,7 @@ provider "aws" {
 
 # Create a Security Group
 resource "aws_security_group" "instance_sg" {
-  name_prefix = "dev-tinder-sg-"
+  name        = "dev-tinder-sg-v3"
   description = "Allow SSH, HTTP, and App ports"
 
   ingress {
@@ -42,6 +42,13 @@ resource "aws_security_group" "instance_sg" {
     from_port   = 3000
     to_port     = 3000
     protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port   = -1
+    to_port     = -1
+    protocol    = "icmp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 

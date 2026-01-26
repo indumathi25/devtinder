@@ -45,8 +45,10 @@ jobs:
 
       - name: Wait for Server to be Ready
         run: |
-          echo "Waiting 90 seconds for AWS networking to stabilize..."
-          sleep 90
+          echo "Waiting 120 seconds for AWS networking to stabilize..."
+          sleep 120
+          echo "Checking connectivity to ${{ env.SERVER_IP }}..."
+          nc -zv -w 5 ${{ env.SERVER_IP }} 22 || echo "Port 22 not reachable yet"
 
       - name: Deploy to EC2
         uses: appleboy/ssh-action@master
