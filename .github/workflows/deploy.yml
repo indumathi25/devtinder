@@ -1,0 +1,62 @@
+name: Deploy to AWS EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_REGION: 'eu-west-1' # Ensure this matches your terraform variables or main.tf
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+
+      - name: Terraform Init
+        id: init
+        run: terraform init
+        working-directory: ./terraform
+        # We need to initialize with backend config if using partial config, 
+        # or rely on main.tf having the backend block. 
+        # For this setup, we assume the user will commit a main.tf with backend block
+        # OR we configure it via CLI (complex). 
+        # Let's rely on the file updates I will make next.
+
+      - name: Terraform Apply
+        id: apply
+        run: |
+          terraform apply -auto-approve
+          echo "SERVER_IP=$(terraform output -raw instance_public_ip)" >> $GITHUB_ENV
+        working-directory: ./terraform
+
+      - name: Wait for Server to be Ready
+        run: sleep 60 # Give the user_data script time to finish installing Docker
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ env.SERVER_IP }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            # Check if app dir exists (it might be fresh)
+            if [ ! -d "/home/ubuntu/app" ]; then
+              echo "App directory not found, waiting for user_data script..."
+              sleep 30
+            fi
+            
+            cd /home/ubuntu/app || exit 1
+            
+            # Pull latest changes
+            git pull origin main
+            
+            # Rebuild and restart containers
+            sudo docker compose up -d --build

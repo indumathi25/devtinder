@@ -5,7 +5,14 @@ terraform {
       version = "~> 4.16"
     }
   }
-  required_version = ">= 1.2.0"
+  required_version = ">= 1.0.0"
+
+  # UNCOMMENT THIS BLOCK AFTER CREATING YOUR S3 BUCKET
+   backend "s3" {
+     bucket = "devtinder-state-bucket"
+     key    = "devtinder/terraform.tfstate"
+     region = "eu-west-1"
+   }
 }
 
 provider "aws" {
@@ -79,9 +86,9 @@ resource "aws_instance" "app_server" {
 
   user_data = <<-EOF
               #!/bin/bash
-              # Update and install Docker
+              # 1. Update and install Docker
               sudo apt-get update
-              sudo apt-get install -y ca-certificates curl gnupg
+              sudo apt-get install -y ca-certificates curl gnupg git
               sudo install -m 0755 -d /etc/apt/keyrings
               curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
               sudo chmod a+r /etc/apt/keyrings/docker.gpg
@@ -94,21 +101,15 @@ resource "aws_instance" "app_server" {
               sudo apt-get update
               sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
-              # Install Docker Compose (standalone if needed, but plugin is there)
-              
-              # Set up application
+              # 2. Setup App Directory
               mkdir -p /home/ubuntu/app
               cd /home/ubuntu/app
               
-              # Ideally, you would git clone here. 
-              # For this demo, we assume we might scp files or just clone a repo.
-              # git clone https://github.com/indumathivelan/devtinder.git .
-              
-              # Since the user has local files, a simple clone might not work if changes aren't pushed.
-              # We will add a placeholder echo command.
-              echo "Instance Ready for Deployment." > status.txt
-              
-              # Auto-start logic would go here if we were cloning.
+              # 3. Clone Repository
+              git clone https://github.com/indumathivelan/devtinder.git .
+
+              # 4. Start Application
+              sudo docker compose up -d --build
               EOF
 
   tags = {
