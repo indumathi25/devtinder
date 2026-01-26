@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import axiosInstance from "../utils/axios";
 import { addUser } from "../utils/userSlice";
@@ -13,6 +13,17 @@ const Profile = () => {
     const [about, setAbout] = useState(user?.about || "");
     const [toast, setToast] = useState("");
     const dispatch = useDispatch();
+
+    useEffect(() => {
+        if (user) {
+            setFirstName(user.firstName || "");
+            setLastName(user.lastName || "");
+            setPhotoUrl(user.photoUrl || "");
+            setAge(user.age || "");
+            setGender(user.gender || "");
+            setAbout(user.about || "");
+        }
+    }, [user]);
 
     const handleSave = async () => {
         try {

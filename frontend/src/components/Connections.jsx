@@ -1,8 +1,7 @@
 import useSWR from "swr";
-import fetcher from "../utils/fetcher";
 
 const Connections = () => {
-    const { data, error, isLoading } = useSWR("/user/connections", fetcher);
+    const { data, error, isLoading } = useSWR("/user/connections");
 
     if (error) return <div className="text-center mt-10">Failed to load connections</div>;
     if (isLoading) return <div className="text-center mt-10">Loading...</div>;

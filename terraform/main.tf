@@ -7,7 +7,7 @@ terraform {
   }
   required_version = ">= 1.0.0"
 
-  # UNCOMMENT THIS BLOCK AFTER CREATING YOUR S3 BUCKET
+  # We store the "state" file (the record of what exists) in an S3 bucket
    backend "s3" {
      bucket = "devtinder-state-bucket"
      key    = "devtinder/terraform.tfstate"
