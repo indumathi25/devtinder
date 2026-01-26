@@ -36,6 +36,7 @@ jobs:
         id: apply
         run: |
           terraform apply -auto-approve
+          terraform refresh
           IP=$(terraform output -raw instance_public_ip)
           echo "SERVER_IP=$IP" >> $GITHUB_ENV
           echo "Target IP: $IP"
@@ -48,7 +49,7 @@ jobs:
           echo "Waiting 120 seconds for AWS networking to stabilize..."
           sleep 120
           echo "Checking connectivity to ${{ env.SERVER_IP }}..."
-          nc -zv -w 5 ${{ env.SERVER_IP }} 22 || echo "Port 22 not reachable yet"
+          nc -zv -w 10 ${{ env.SERVER_IP }} 22 || echo "Port 22 not reachable yet"
 
       - name: Deploy to EC2
         uses: appleboy/ssh-action@master
@@ -56,34 +57,22 @@ jobs:
           host: ${{ env.SERVER_IP }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
+          timeout: 120s
+          command_timeout: 10m
           script: |
-            # Function to wait for a file/directory to exist
-            wait_for_init() {
-              echo "Waiting for server initialization..."
-              for i in {1..20}; do
-                if [ -d "/home/ubuntu/app/.git" ]; then
-                  echo "Repository ready!"
-                  return 0
-                fi
-                echo "Waiting... ($i/20)"
-                sleep 15
-              done
-              echo "Timeout waiting for repository!"
-              return 1
-            }
-
-            # Wait for user_data to finish cloning
-            wait_for_init || exit 1
-            
+            # 1. Ensure app directory exists
+            mkdir -p /home/ubuntu/app
             cd /home/ubuntu/app
-            
-            # Pull latest changes
-            echo "Pulling latest changes..."
-            git pull origin main
-            
-            # Ensure permissions are correct
-            sudo chown -R ubuntu:ubuntu .
-            
-            # Rebuild and restart containers
-            echo "Starting containers..."
+
+            # 2. Initialize or Update Repository
+            if [ ! -d ".git" ]; then
+              echo "Cloning repository for the first time..."
+              git clone https://github.com/indumathi25/devtinder.git .
+            else
+              echo "Updating existing repository..."
+              git pull origin main
+            fi
+
+            # 3. Start containers
+            echo "Starting Docker containers..."
             sudo docker compose up -d --build

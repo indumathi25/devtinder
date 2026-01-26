@@ -98,7 +98,6 @@ resource "aws_instance" "app_server" {
 
   user_data = <<-EOF
               #!/bin/bash
-              # 1. Update and install Docker
               sudo apt-get update
               sudo apt-get install -y ca-certificates curl gnupg git
               sudo install -m 0755 -d /etc/apt/keyrings
@@ -112,19 +111,9 @@ resource "aws_instance" "app_server" {
               
               sudo apt-get update
               sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-
-              # 2. Setup App Directory
-              mkdir -p /home/ubuntu/app
-              cd /home/ubuntu/app
               
-              # 3. Clone Repository
-              git clone https://github.com/indumathi25/devtinder.git .
-
-              # 4. Start Application
-              sudo docker compose up -d --build
-              
-              # 5. Fix permissions for ubuntu user
-              sudo chown -R ubuntu:ubuntu /home/ubuntu/app
+              # Add ubuntu user to docker group
+              sudo usermod -aG docker ubuntu
               EOF
 
   tags = {
