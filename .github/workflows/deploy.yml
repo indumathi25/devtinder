@@ -51,16 +51,33 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            # Check if app dir exists (it might be fresh)
-            if [ ! -d "/home/ubuntu/app" ]; then
-              echo "App directory not found, waiting for user_data script..."
-              sleep 30
-            fi
+            # Function to wait for a file/directory to exist
+            wait_for_init() {
+              echo "Waiting for server initialization..."
+              for i in {1..20}; do
+                if [ -d "/home/ubuntu/app/.git" ]; then
+                  echo "Repository ready!"
+                  return 0
+                fi
+                echo "Waiting... ($i/20)"
+                sleep 15
+              done
+              echo "Timeout waiting for repository!"
+              return 1
+            }
+
+            # Wait for user_data to finish cloning
+            wait_for_init || exit 1
             
-            cd /home/ubuntu/app || exit 1
+            cd /home/ubuntu/app
             
             # Pull latest changes
+            echo "Pulling latest changes..."
             git pull origin main
             
+            # Ensure permissions are correct
+            sudo chown -R ubuntu:ubuntu .
+            
             # Rebuild and restart containers
+            echo "Starting containers..."
             sudo docker compose up -d --build

@@ -110,6 +110,9 @@ resource "aws_instance" "app_server" {
 
               # 4. Start Application
               sudo docker compose up -d --build
+              
+              # 5. Fix permissions for ubuntu user
+              sudo chown -R ubuntu:ubuntu /home/ubuntu/app
               EOF
 
   tags = {
