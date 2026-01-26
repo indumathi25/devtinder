@@ -13,3 +13,9 @@ variable "public_key_path" {
   # User needs to ensure this file exists or update the path
   default     = "~/.ssh/id_rsa.pub"
 }
+
+variable "public_key" {
+  description = "Public SSH key content"
+  type        = string
+  default     = ""
+}

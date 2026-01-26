@@ -35,6 +35,7 @@ Go to your Repo -> **Settings** -> **Secrets and variables** -> **Actions** and 
 | `AWS_ACCESS_KEY_ID` | Your IAM Access Key |
 | `AWS_SECRET_ACCESS_KEY` | Your IAM Secret Key |
 | `EC2_SSH_KEY` | Content of `~/.ssh/id_rsa` (Private Key) |
+| `EC2_PUBLIC_KEY` | Content of `~/.ssh/id_rsa.pub` (Public Key) |
 
 ### Step 3: Trigger Deployment
 

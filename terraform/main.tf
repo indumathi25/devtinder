@@ -57,7 +57,7 @@ resource "aws_security_group" "instance_sg" {
 # Assumes you have ~/.ssh/id_rsa.pub. If not, generate one or change path.
 resource "aws_key_pair" "deployer" {
   key_name   = "dev-tinder-key"
-  public_key = file(var.public_key_path)
+  public_key = var.public_key != "" ? var.public_key : file(var.public_key_path)
 }
 
 # Get latest Ubuntu 22.04 AMI
