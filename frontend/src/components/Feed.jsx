@@ -12,7 +12,7 @@ const Feed = () => {
     const handleSendRequest = async (status) => {
         try {
             await axiosInstance.post(`/request/send/${status}/${user._id}`);
-            mutate();
+            mutate(); // to get the fresh feed 
         } catch (err) {
             console.error(err);
         }
