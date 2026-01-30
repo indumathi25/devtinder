@@ -60,8 +60,8 @@ authRouter.post('/login', async (req, res) => {
     // Set hardened cookies
     const cookieOptions = {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      secure: false, // Set to false since we are using HTTP (via IP) instead of HTTPS
+      sameSite: 'lax',
     };
 
     res.cookie('token', accessToken, {
@@ -110,8 +110,8 @@ authRouter.post('/refresh-token', async (req, res) => {
     // Set hardened cookie
     res.cookie('token', newAccessToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      secure: false, // Set to false since we are using HTTP (via IP) instead of HTTPS
+      sameSite: 'lax',
       maxAge: 3600000,
     });
 

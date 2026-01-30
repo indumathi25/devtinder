@@ -21,12 +21,16 @@ const userAuth = async (req, res, next) => {
 
     const user = await User.findById(decoded._id);
     if (!user) {
-      throw new Error('User not found');
+      throw new Error('User not found in database');
     }
     req.user = user;
     next();
   } catch (error) {
-    return res.status(401).json({ message: 'Error:', error: error.message });
+    console.error(`AUTH ERROR: ${error.message}`);
+    return res.status(401).json({
+      message: 'Unauthorized',
+      debug: error.message // Sending more detail while debugging
+    });
   }
 };
 
