@@ -20,8 +20,13 @@ const fetchSecrets = async () => {
         );
 
         if (response.SecretString) {
-            cachedSecrets = JSON.parse(response.SecretString);
-            return cachedSecrets;
+            try {
+                cachedSecrets = JSON.parse(response.SecretString);
+                return cachedSecrets;
+            } catch (parseError) {
+                console.error("CRITICAL: Failed to parse secrets JSON from AWS Secrets Manager. Ensure the secret is a valid Key/Value (JSON) object.");
+                throw parseError;
+            }
         }
     } catch (error) {
         console.error("Error fetching secrets from AWS Secrets Manager:", error);
