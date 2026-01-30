@@ -36,16 +36,25 @@ const fetchSecrets = async () => {
 
 const getJWTPrivateKey = async () => {
     const secrets = await fetchSecrets();
+    if (!secrets?.JWT_PRIVATE_KEY) {
+        console.warn("WARN: JWT_PRIVATE_KEY not found in AWS Secrets Manager, falling back to environment variable.");
+    }
     return secrets?.JWT_PRIVATE_KEY || process.env.JWT_PRIVATE_KEY;
 };
 
 const getJWTPublicKey = async () => {
     const secrets = await fetchSecrets();
+    if (!secrets?.JWT_PUBLIC_KEY) {
+        console.warn("WARN: JWT_PUBLIC_KEY not found in AWS Secrets Manager, falling back to environment variable.");
+    }
     return secrets?.JWT_PUBLIC_KEY || process.env.JWT_PUBLIC_KEY;
 };
 
 const getMongoURI = async () => {
     const secrets = await fetchSecrets();
+    if (!secrets?.MONGO_URI) {
+        console.warn("WARN: MONGO_URI not found in AWS Secrets Manager, falling back to environment variable.");
+    }
     return secrets?.MONGO_URI || process.env.MONGO_URI;
 };
 
