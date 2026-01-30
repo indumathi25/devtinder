@@ -1,6 +1,9 @@
 const socket = require('socket.io');
 const crypto = require('crypto');
 const { Chat } = require('../../models/chat');
+const jwt = require('jsonwebtoken');
+const { getJWTPublicKey } = require('../../utils/secrets');
+
 
 const getSecretRoomId = (userId, targetUserId) => {
   return crypto
@@ -18,7 +21,7 @@ const initializeSocket = (server) => {
   });
 
   // Authentication Middleware
-  io.use((socket, next) => {
+  io.use(async (socket, next) => {
     try {
       const cookieHeader = socket.handshake.headers.cookie;
       if (!cookieHeader) return next(new Error('Authentication error: No cookies found'));
@@ -29,8 +32,7 @@ const initializeSocket = (server) => {
 
       if (!token) return next(new Error('Authentication error: Token not found'));
 
-      const jwt = require('jsonwebtoken');
-      const publicKey = process.env.JWT_PUBLIC_KEY;
+      const publicKey = await getJWTPublicKey();
 
       if (!publicKey) {
         // Fallback for development if no public key is provided

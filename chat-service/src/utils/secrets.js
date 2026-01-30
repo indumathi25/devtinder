@@ -9,7 +9,7 @@ let cachedSecrets = null;
 const fetchSecrets = async () => {
     if (cachedSecrets) return cachedSecrets;
 
-    const secretName = "devtinder/secrets"; // Consolidated secret name
+    const secretName = "devtinder/secrets";
 
     try {
         const response = await client.send(
@@ -29,9 +29,9 @@ const fetchSecrets = async () => {
     }
 };
 
-const getJWTPrivateKey = async () => {
+const getMongoURI = async () => {
     const secrets = await fetchSecrets();
-    return secrets?.JWT_PRIVATE_KEY || process.env.JWT_PRIVATE_KEY;
+    return secrets?.MONGO_URI || process.env.MONGO_URI;
 };
 
 const getJWTPublicKey = async () => {
@@ -39,9 +39,5 @@ const getJWTPublicKey = async () => {
     return secrets?.JWT_PUBLIC_KEY || process.env.JWT_PUBLIC_KEY;
 };
 
-const getMongoURI = async () => {
-    const secrets = await fetchSecrets();
-    return secrets?.MONGO_URI || process.env.MONGO_URI;
-};
-
-module.exports = { getJWTPrivateKey, getJWTPublicKey, getMongoURI };
+module.exports = { getMongoURI, getJWTPublicKey };
+// Note: Private Key is only needed by main backend, so we don't include getJWTPrivateKey here
