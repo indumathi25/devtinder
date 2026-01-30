@@ -18,9 +18,9 @@ export default defineConfig(({ mode }) => {
       port: 5173,
       proxy: {
         '/api/chat': {
-          target: 'http://localhost:7777', // Chat microservice
+          target: 'http://chat-service:7777', // Chat microservice
           changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api\/chat/, ''),
+          rewrite: (path) => path.replace(/^\/api/, ''),
         },
         '/api': {
           target: target, // Main backend

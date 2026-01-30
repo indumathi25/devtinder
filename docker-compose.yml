@@ -6,10 +6,11 @@ services:
     ports:
       - '3000:3000'
     environment:
-      - MONGO_URI=mongodb+srv://indumathivelan:r4Rj9!FvN~*g@namastenode.et21s.mongodb.net/devTinder
-      # Replace with actual connection string if you want dynamic config,
-      # but currently it's likely hardcoded or in .env (which needs to be passed)
-      # For now assuming it is set in code or .env file is copied
+      - MONGO_URI=${MONGO_URI}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
+      - AWS_REGION=eu-west-1
+      - NODE_ENV=production
+    restart: always
     volumes:
       - ./backend:/app
       - /app/node_modules
@@ -19,7 +20,10 @@ services:
     ports:
       - '7777:7777'
     environment:
-      - MONGO_URI=mongodb+srv://indumathivelan:r4Rj9!FvN~*g@namastenode.et21s.mongodb.net/devTinder
+      - MONGO_URI=${MONGO_URI}
+      - JWT_PUBLIC_KEY=${JWT_PUBLIC_KEY}
+      - NODE_ENV=production
+    restart: always
     volumes:
       - ./chat-service:/app
       - /app/node_modules
@@ -27,9 +31,10 @@ services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile
     ports:
-      - '5173:5173'
+      - '80:80'
+    restart: always
     volumes:
       - ./frontend:/app
       - /app/node_modules

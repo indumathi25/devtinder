@@ -1,8 +1,5 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
-const jwt = require('jsonwebtoken');
-const { getJWTPrivateKey } = require('../utils/secrets');
-
 // Creating the schema
 const userSchema = new mongoose.Schema(
   {
@@ -74,46 +71,20 @@ const userSchema = new mongoose.Schema(
         message: 'Skills array can have at most 10 items',
       },
     },
-    refreshTokens: [
-      {
-        token: { type: String, required: true },
-        createdAt: { type: Date, default: Date.now, expires: '7d' },
-      },
-    ],
   },
   // Adds createdAt and updatedAt fields
   { timestamps: true }
 );
 
 userSchema.index({ firstName: 1, lastName: 1 }); // Compound index for name searches
-userSchema.methods.getJWT = async function () {
-  const user = this;
-
-  const privateKey = await getJWTPrivateKey();
-
-  if (!privateKey) {
-    console.warn('JWT_PRIVATE_KEY not found, falling back to static secret (DEVELOPMENT ONLY)');
-    return jwt.sign({ _id: user._id }, 'dev_tinder_secret_key', {
-      expiresIn: '1h',
-    });
-  }
-
-  // Create JWT token using RS256
-  const token = jwt.sign({ _id: user._id }, privateKey, {
-    algorithm: 'RS256',
-    expiresIn: '1h',
-  });
-  return token;
-};
-
-userSchema.methods.getRefreshToken = function () {
+userSchema.methods.getJWT = function () {
   const user = this;
   const jwt = require('jsonwebtoken');
-  const secret = process.env.JWT_REFRESH_SECRET || 'dev_tinder_refresh_secret';
-
-  return jwt.sign({ _id: user._id }, secret, {
-    expiresIn: '7d',
+  // Create JWT token
+  const token = jwt.sign({ _id: user._id }, 'dev_tinder_secret_key', {
+    expiresIn: '1d',
   });
+  return token;
 };
 
 userSchema.methods.validatePassword = async function (inputPassword) {

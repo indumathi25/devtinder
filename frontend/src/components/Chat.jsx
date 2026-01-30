@@ -2,12 +2,30 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { createSocketConnection } from '../utils/socket';
 import { useSelector } from 'react-redux';
+import useSWR from 'swr';
+import axiosInstance from '../utils/axios';
 
 const Chat = () => {
   const { targetUserId } = useParams();
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const user = useSelector((store) => store.user);
+
+  // Fetch Chat History
+  const { data: chatData, isLoading } = useSWR(user ? `/chat/${targetUserId}` : null);
+
+  useEffect(() => {
+    if (chatData?.messages) {
+      const formattedMessages = chatData.messages.map((m) => ({
+        user: {
+          firstName: m.senderId?.firstName || 'Friend',
+          lastName: m.senderId?.lastName || '',
+        },
+        text: m.text,
+      }));
+      setMessages(formattedMessages);
+    }
+  }, [chatData]);
 
   // Use a ref to hold the socket instance to persist between renders without causing re-renders
   const socketRef = useRef(null);
@@ -17,19 +35,22 @@ const Chat = () => {
     const newSocket = createSocketConnection();
     socketRef.current = newSocket;
 
-    newSocket.emit('joinChat', { userId: user._id, targetUserId });
+    newSocket.emit('joinChat', {
+      firstName: user.firstName,
+      userId: user._id,
+      targetUserId,
+    });
 
     newSocket.on('messageReceived', (msg) => {
-      const { text, senderId } = msg;
+      const { firstName, lastName, text } = msg;
       setMessages((prev) => [
         ...prev,
         {
           user: {
-            firstName: senderId === user._id ? user.firstName : 'Friend',
-            lastName: '',
+            firstName,
+            lastName,
           },
           text: text,
-          senderId,
         },
       ]);
     });
@@ -42,6 +63,8 @@ const Chat = () => {
   const sendMessage = () => {
     if (!socketRef.current) return;
     socketRef.current.emit('sendMessage', {
+      firstName: user.firstName,
+      lastName: user.lastName,
       userId: user._id,
       targetUserId,
       text: newMessage,
@@ -59,7 +82,7 @@ const Chat = () => {
               key={index}
               className={
                 'chat ' +
-                (msg.senderId === user?._id ? 'chat-end' : 'chat-start')
+                (msg.user.firstName === user?.firstName ? 'chat-end' : 'chat-start')
               }
             >
               <div className='chat-header'>
