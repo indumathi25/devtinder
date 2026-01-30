@@ -8,6 +8,7 @@
     "dev": "nodemon src/index.js"
   },
   "dependencies": {
+    "@aws-sdk/client-secrets-manager": "^3.500.0",
     "bcrypt": "^6.0.0",
     "cookie": "^0.6.0",
     "cookie-parser": "^1.4.7",

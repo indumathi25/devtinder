@@ -1,9 +1,12 @@
 const mongoose = require('mongoose');
+const { getMongoURI } = require('../utils/secrets');
 
 const connectDB = async () => {
-  await mongoose.connect(
-    'mongodb+srv://indumathi25:indumathi25@namastenode.hywhhq9.mongodb.net/devTinder?appName=NamasteNode',
-  );
+  const mongoURI = await getMongoURI();
+  if (!mongoURI) {
+    throw new Error('MONGO_URI not found in Secrets Manager or environment');
+  }
+  await mongoose.connect(mongoURI);
 };
 
 module.exports = connectDB;
