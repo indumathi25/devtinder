@@ -9,9 +9,10 @@ terraform {
 
   # We store the "state" file (the record of what exists) in an S3 bucket
    backend "s3" {
-     bucket = "devtinder-state-bucket"
-     key    = "devtinder/terraform.tfstate"
-     region = "eu-west-1"
+     bucket  = "devtinder-state-bucket"
+     key     = "devtinder/terraform.tfstate"
+     region  = "eu-west-1"
+     encrypt = true
    }
 }
 
