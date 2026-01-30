@@ -40,12 +40,19 @@ jobs:
           TF_VAR_public_key: ${{ secrets.EC2_PUBLIC_KEY }}
 
       - name: Update AWS Secrets Manager
+        env:
+          JWT_PRIVATE_KEY: ${{ secrets.JWT_PRIVATE_KEY }}
+          JWT_PUBLIC_KEY: ${{ secrets.JWT_PUBLIC_KEY }}
+          MONGO_URI: ${{ secrets.MONGO_URI }}
         run: |
-          aws secretsmanager put-secret-value --secret-id devtinder/secrets --secret-string '{
-            "JWT_PRIVATE_KEY": "${{ secrets.JWT_PRIVATE_KEY }}",
-            "JWT_PUBLIC_KEY": "${{ secrets.JWT_PUBLIC_KEY }}",
-            "MONGO_URI": "${{ secrets.MONGO_URI }}"
-          }'
+          # Use jq to construct a valid JSON string even with multiline variables
+          JSON_SECRET=$(jq -n \
+            --arg jpk "$JWT_PRIVATE_KEY" \
+            --arg jpub "$JWT_PUBLIC_KEY" \
+            --arg muri "$MONGO_URI" \
+            '{JWT_PRIVATE_KEY: $jpk, JWT_PUBLIC_KEY: $jpub, MONGO_URI: $muri}')
+          
+          aws secretsmanager put-secret-value --secret-id devtinder/secrets --secret-string "$JSON_SECRET"
 
       - name: Wait for Server to be Ready
         run: |
