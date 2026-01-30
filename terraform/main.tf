@@ -9,9 +9,10 @@ terraform {
 
   # We store the "state" file (the record of what exists) in an S3 bucket
    backend "s3" {
-     bucket = "devtinder-state-bucket"
-     key    = "devtinder/terraform.tfstate"
-     region = "eu-west-1"
+     bucket  = "devtinder-state-bucket"
+     key     = "devtinder/terraform.tfstate"
+     region  = "eu-west-1"
+     encrypt = true
    }
 }
 
@@ -131,9 +132,9 @@ resource "aws_instance" "app_server" {
 }
 
 # 1. AWS Secrets Manager Secret
-resource "aws_secretsmanager_secret" "jwt_private_key" {
-  name                    = "devtinder/jwt_private_key"
-  description             = "JWT Private Key for DevTinder"
+resource "aws_secretsmanager_secret" "app_secrets" {
+  name                    = "devtinder/secrets"
+  description             = "Consolidated Secrets (JWT & Mongo) for DevTinder"
   recovery_window_in_days = 0 # For development convenience
 }
 
@@ -168,7 +169,7 @@ resource "aws_iam_role_policy" "secrets_policy" {
           "secretsmanager:GetSecretValue",
         ]
         Effect   = "Allow"
-        Resource = aws_secretsmanager_secret.jwt_private_key.arn
+        Resource = aws_secretsmanager_secret.app_secrets.arn
       },
     ]
   })

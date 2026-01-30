@@ -22,14 +22,16 @@ const server = http.createServer(app);
 const initializeSocket = require('./config/utils/socket');
 initializeSocket(server);
 
-// First connect to the DB and then listen to the server
-connectDB()
-  .then(() => {
-    console.log('Database connected successfully');
-    server.listen(7777, () => {
-      console.log(`Server is running on port 7777`);
+const PORT = 7777;
+server.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+
+  // Connect to DB after starting the listener
+  connectDB()
+    .then(() => {
+      console.log('Database connected successfully');
+    })
+    .catch((err) => {
+      console.error('Database connection failed:', err);
     });
-  })
-  .catch((err) => {
-    console.error('Database connection failed:', err);
-  });
+});

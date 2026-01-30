@@ -39,6 +39,14 @@ jobs:
         env:
           TF_VAR_public_key: ${{ secrets.EC2_PUBLIC_KEY }}
 
+      - name: Update AWS Secrets Manager
+        run: |
+          aws secretsmanager put-secret-value --secret-id devtinder/secrets --secret-string '{
+            "JWT_PRIVATE_KEY": "${{ secrets.JWT_PRIVATE_KEY }}",
+            "JWT_PUBLIC_KEY": "${{ secrets.JWT_PUBLIC_KEY }}",
+            "MONGO_URI": "${{ secrets.MONGO_URI }}"
+          }'
+
       - name: Wait for Server to be Ready
         run: |
           echo "Waiting 120 seconds for AWS networking to stabilize..."

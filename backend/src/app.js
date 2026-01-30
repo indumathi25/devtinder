@@ -26,20 +26,27 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
+// Health check for Nginx/Load Balancer
+app.get('/health', (req, res) => {
+  res.status(200).send('OK');
+});
+
 // Using the routes
 app.use('/', authRouter);
 app.use('/', profileRouter);
 app.use('/', requestRouter);
 app.use('/', userRouter);
 
-// First connect to the DB and then listen to the server
-connectDB()
-  .then(() => {
-    console.log('Database connected successfully');
-    app.listen(3000, () => {
-      console.log(`Server is running on port 3000`);
+const PORT = 3000;
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+
+  // Connect to DB after starting the listener
+  connectDB()
+    .then(() => {
+      console.log('Database connected successfully');
+    })
+    .catch((err) => {
+      console.error('Database connection failed:', err);
     });
-  })
-  .catch((err) => {
-    console.error('Database connection failed:', err);
-  });
+});
