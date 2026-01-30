@@ -8,8 +8,8 @@ const cookieParser = require('cookie-parser');
 const app = express();
 app.use(
   cors({
-    // Allow localhost in dev, but in production we can be more restrictive or allow the dynamic origin
-    origin: process.env.NODE_ENV === 'production' ? false : 'http://localhost:5173',
+    // Allow localhost in dev, but in production we allow the request origin (true)
+    origin: process.env.NODE_ENV === 'production' ? true : 'http://localhost:5173',
     credentials: true,
   }),
 );
