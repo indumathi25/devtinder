@@ -48,12 +48,31 @@ authRouter.post('/login', async (req, res) => {
       return res.status(401).json({ message: 'Invalid password' });
     }
 
-    // Add the token to cookie nad send the response
-    const usertoken = user.getJWT();
-    res.cookie('token', usertoken, {
+    // Generate tokens
+    const accessToken = await user.getJWT();
+    const refreshToken = user.getRefreshToken();
+
+    // Store refresh token in user's account
+    user.refreshTokens.push({ token: refreshToken });
+    await user.save();
+
+    // Set hardened cookies
+    const cookieOptions = {
       httpOnly: true,
-      expires: new Date(Date.now() + 86400000),
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+    };
+
+    res.cookie('token', accessToken, {
+      ...cookieOptions,
+      maxAge: 3600000, // 1 hour
     });
+
+    res.cookie('refreshToken', refreshToken, {
+      ...cookieOptions,
+      maxAge: 7 * 24 * 3600000, // 7 days
+    });
+
     res.json({ message: 'Login successful', userId: user._id });
   } catch (error) {
     return res
@@ -62,13 +81,64 @@ authRouter.post('/login', async (req, res) => {
   }
 });
 
-authRouter.post('/logout', (req, res) => {
-  // In big compainies, we may maintain a token blacklist to invalidate tokens
-  res
-    .cookie('token', '', { expires: new Date(Date.now()) })
-    .send('Logout successful');
-  // Alternatively, you can use res.clearCookie
-  //res.clearCookie('token');
+authRouter.post('/refresh-token', async (req, res) => {
+  const refreshToken = req.cookies.refreshToken;
+  if (!refreshToken) {
+    return res.status(401).json({ message: 'Refresh token not found' });
+  }
+
+  try {
+    const jwt = require('jsonwebtoken');
+    const secret = process.env.JWT_REFRESH_SECRET || 'dev_tinder_refresh_secret';
+    const decoded = jwt.verify(refreshToken, secret);
+
+    const user = await User.findById(decoded._id);
+    if (!user) {
+      return res.status(401).json({ message: 'User not found' });
+    }
+
+    // Check if the refresh token is in the user's list
+    const tokenExists = user.refreshTokens.some((t) => t.token === refreshToken);
+    if (!tokenExists) {
+      return res.status(401).json({ message: 'Invalid refresh token' });
+    }
+
+    // Generate new access token
+    const newAccessToken = await user.getJWT();
+
+    // Set hardened cookie
+    res.cookie('token', newAccessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 3600000,
+    });
+
+    res.json({ message: 'Token refreshed' });
+  } catch (error) {
+    return res.status(401).json({ message: 'Invalid refresh token', error: error.message });
+  }
+});
+
+authRouter.post('/logout', async (req, res) => {
+  const refreshToken = req.cookies.refreshToken;
+  if (refreshToken) {
+    try {
+      // Remove the refresh token from the database
+      const decoded = require('jsonwebtoken').decode(refreshToken);
+      if (decoded && decoded._id) {
+        await User.findByIdAndUpdate(decoded._id, {
+          $pull: { refreshTokens: { token: refreshToken } },
+        });
+      }
+    } catch (err) {
+      console.error('Error removing refresh token on logout:', err);
+    }
+  }
+
+  res.clearCookie('token');
+  res.clearCookie('refreshToken');
+  res.send('Logout successful');
 });
 
 module.exports = authRouter;

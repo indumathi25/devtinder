@@ -26,11 +26,6 @@ jobs:
         id: init
         run: terraform init
         working-directory: ./terraform
-        # We need to initialize with backend config if using partial config, 
-        # or rely on main.tf having the backend block. 
-        # For this setup, we assume the user will commit a main.tf with backend block
-        # OR we configure it via CLI (complex). 
-        # Let's rely on the file updates I will make next.
 
       - name: Terraform Apply
         id: apply

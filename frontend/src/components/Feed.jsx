@@ -1,9 +1,8 @@
 import axiosInstance from "../utils/axios";
 import useSWR from "swr";
-import fetcher from "../utils/fetcher";
 
 const Feed = () => {
-    const { data: feed, mutate } = useSWR("/feed", fetcher);
+    const { data: feed, mutate } = useSWR("/feed");
 
     if (!feed) return <div className="text-center mt-10">Loading...</div>;
     if (feed.length === 0) return <div className="text-center mt-10">No users found</div>;
@@ -13,7 +12,7 @@ const Feed = () => {
     const handleSendRequest = async (status) => {
         try {
             await axiosInstance.post(`/request/send/${status}/${user._id}`);
-            mutate();
+            mutate(); // to get the fresh feed 
         } catch (err) {
             console.error(err);
         }

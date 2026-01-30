@@ -7,7 +7,7 @@ terraform {
   }
   required_version = ">= 1.0.0"
 
-  # UNCOMMENT THIS BLOCK AFTER CREATING YOUR S3 BUCKET
+  # We store the "state" file (the record of what exists) in an S3 bucket
    backend "s3" {
      bucket = "devtinder-state-bucket"
      key    = "devtinder/terraform.tfstate"
@@ -41,6 +41,13 @@ resource "aws_security_group" "instance_sg" {
   ingress {
     from_port   = 3000
     to_port     = 3000
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  
+  ingress {
+    from_port   = 7777
+    to_port     = 7777
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -116,7 +123,59 @@ resource "aws_instance" "app_server" {
               sudo usermod -aG docker ubuntu
               EOF
 
+  iam_instance_profile = aws_iam_instance_profile.app_profile.name
+
   tags = {
     Name = "DevTinderServer"
   }
+}
+
+# 1. AWS Secrets Manager Secret
+resource "aws_secretsmanager_secret" "jwt_private_key" {
+  name                    = "devtinder/jwt_private_key"
+  description             = "JWT Private Key for DevTinder"
+  recovery_window_in_days = 0 # For development convenience
+}
+
+# 2. IAM Role for EC2
+resource "aws_iam_role" "app_role" {
+  name = "devtinder-app-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+      },
+    ]
+  })
+}
+
+# 3. IAM Policy for Secrets Manager
+resource "aws_iam_role_policy" "secrets_policy" {
+  name = "devtinder-secrets-policy"
+  role = aws_iam_role.app_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "secretsmanager:GetSecretValue",
+        ]
+        Effect   = "Allow"
+        Resource = aws_secretsmanager_secret.jwt_private_key.arn
+      },
+    ]
+  })
+}
+
+# 4. IAM Instance Profile
+resource "aws_iam_instance_profile" "app_profile" {
+  name = "devtinder-app-profile"
+  role = aws_iam_role.app_role.name
 }

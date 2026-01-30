@@ -1,9 +1,8 @@
 import useSWR from "swr";
-import fetcher from "../utils/fetcher";
 import axiosInstance from "../utils/axios";
 
 const Requests = () => {
-    const { data: requests, error, isLoading, mutate } = useSWR("/user/requests/received", fetcher);
+    const { data: requests, error, isLoading, mutate } = useSWR("/user/requests/received");
 
     const reviewRequest = async (status, requestId) => {
         try {

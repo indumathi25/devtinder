@@ -1,5 +1,6 @@
 const express = require('express');
-// const helmet = require('helmet');
+const helmet = require('helmet');
+const cors = require('cors');
 const connectDB = require('./config/database');
 const cookieParser = require('cookie-parser');
 // Importing routes
@@ -11,7 +12,16 @@ const userRouter = require('./routes/user');
 const app = express();
 
 // Helmet middleware for security headers
-// app.use(helmet());
+app.use(helmet());
+
+// CORS configuration
+app.use(
+  cors({
+    origin: process.env.NODE_ENV === 'production' ? false : 'http://localhost:5173',
+    credentials: true,
+  })
+);
+
 // Middleware to parse JSON bodies
 app.use(express.json());
 app.use(cookieParser());

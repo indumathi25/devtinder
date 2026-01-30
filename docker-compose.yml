@@ -4,19 +4,42 @@ services:
   backend:
     build: ./backend
     ports:
-      - "3000:3000"
+      - '3000:3000'
     environment:
-      - MONGO_URI=mongodb+srv://indumathivelan:r4Rj9!FvN~*g@namastenode.et21s.mongodb.net/devTinder
-      # Replace with actual connection string if you want dynamic config, 
-      # but currently it's likely hardcoded or in .env (which needs to be passed)
-      # For now assuming it is set in code or .env file is copied
+      - MONGO_URI=${MONGO_URI}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
+      - AWS_REGION=eu-west-1
+      - NODE_ENV=production
+    restart: always
     volumes:
       - ./backend:/app
       - /app/node_modules
 
-  frontend:
-    build: ./frontend
+  chat-service:
+    build: ./chat-service
     ports:
-      - "80:80"
+      - '7777:7777'
+    environment:
+      - MONGO_URI=${MONGO_URI}
+      - JWT_PUBLIC_KEY=${JWT_PUBLIC_KEY}
+      - NODE_ENV=production
+    restart: always
+    volumes:
+      - ./chat-service:/app
+      - /app/node_modules
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - '80:80'
+    restart: always
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
     depends_on:
       - backend
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - VITE_BACKEND_URL=http://backend:3000
