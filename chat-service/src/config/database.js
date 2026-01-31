@@ -6,6 +6,8 @@ const connectDB = async () => {
   if (!mongoURI) {
     throw new Error('MONGO_URI not found in Secrets Manager or environment');
   }
+  const dbName = mongoURI.split('/').pop().split('?')[0] || 'default';
+  console.log(`Chat Service - Attempting to connect to MongoDB Database: ${dbName}`);
   await mongoose.connect(mongoURI);
 };
 

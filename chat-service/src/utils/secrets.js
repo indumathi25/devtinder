@@ -20,8 +20,14 @@ const fetchSecrets = async () => {
         );
 
         if (response.SecretString) {
-            cachedSecrets = JSON.parse(response.SecretString);
-            return cachedSecrets;
+            try {
+                cachedSecrets = JSON.parse(response.SecretString);
+                console.log(`Chat Service - Successfully retrieved secrets from AWS. Keys found: ${Object.keys(cachedSecrets).join(', ')}`);
+                return cachedSecrets;
+            } catch (parseError) {
+                console.error("Chat Service - CRITICAL: Failed to parse secrets JSON from AWS Secrets Manager.");
+                throw parseError;
+            }
         }
     } catch (error) {
         console.error("Error fetching secrets from AWS Secrets Manager:", error);

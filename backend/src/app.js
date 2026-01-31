@@ -17,7 +17,8 @@ app.use(helmet());
 // CORS configuration
 app.use(
   cors({
-    origin: process.env.NODE_ENV === 'production' ? false : 'http://localhost:5173',
+    // Allow localhost in dev, but in production we allow the request origin (true)
+    origin: process.env.NODE_ENV === 'production' ? true : 'http://localhost:5173',
     credentials: true,
   })
 );
