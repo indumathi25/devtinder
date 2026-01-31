@@ -8,7 +8,9 @@ const connectDB = async () => {
   }
   const dbName = mongoURI.split('/').pop().split('?')[0] || 'default';
   console.log(`Attempting to connect to MongoDB Database: ${dbName}`);
-  await mongoose.connect(mongoURI);
+  await mongoose.connect(mongoURI, {
+    serverSelectionTimeoutMS: 5000, // Timeout after 5s if Atlas is unreachable
+  });
 };
 
 module.exports = connectDB;
