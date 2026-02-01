@@ -28,7 +28,7 @@ authRouter.post('/signup', async (req, res) => {
       skills: req.body.skills,
     });
     await user.save();
-    res.send('User signed up successfully');
+    res.json({ message: 'User signed up successfully' });
   } catch (error) {
     return res
       .status(500)
@@ -139,7 +139,7 @@ authRouter.post('/logout', async (req, res) => {
 
   res.clearCookie('token');
   res.clearCookie('refreshToken');
-  res.send('Logout successful');
+  res.json({ message: 'Logout successful' });
 });
 
 module.exports = authRouter;

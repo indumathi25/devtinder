@@ -6,15 +6,27 @@ import { addUser } from "../utils/userSlice";
 import { useNavigate } from "react-router-dom";
 
 const Login = () => {
-    const [email, setEmail] = useState("a@b.com");
-    const [password, setPassword] = useState("Password@123");
+    const [isLogin, setIsLogin] = useState(true);
+    const [firstName, setFirstName] = useState("");
+    const [lastName, setLastName] = useState("");
+    const [email, setEmail] = useState("indu@gmail.com");
+    const [password, setPassword] = useState("password123");
     const [error, setError] = useState("");
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
-    const loginMutation = useMutation({
-        mutationFn: (credentials) => api.post("/login", credentials),
-        onSuccess: async () => {
+    const authMutation = useMutation({
+        mutationFn: (credentials) => {
+            const endpoint = isLogin ? "/login" : "/signup";
+            return api.post(endpoint, credentials);
+        },
+        onSuccess: async (data) => {
+            if (!isLogin) {
+                // After signup, switch to login mode or auto-login
+                setIsLogin(true);
+                setError("Signup successful! Please login.");
+                return;
+            }
             try {
                 // Fetch profile after login to update store
                 const userData = await api.get("/profile");
@@ -29,16 +41,41 @@ const Login = () => {
         },
     });
 
-    const handleLogin = () => {
+    const handleSubmit = () => {
         setError("");
-        loginMutation.mutate({ email, password });
+        const data = isLogin ? { email, password } : { firstName, lastName, email, password };
+        authMutation.mutate(data);
     };
 
     return (
         <div className="flex justify-center my-10">
             <div className="card w-96 bg-base-300 shadow-xl">
                 <div className="card-body">
-                    <h2 className="card-title justify-center">Login</h2>
+                    <h2 className="card-title justify-center">{isLogin ? "Login" : "Signup"}</h2>
+
+                    {!isLogin && (
+                        <>
+                            <label className="input input-bordered flex items-center gap-2">
+                                <input
+                                    type="text"
+                                    className="grow"
+                                    placeholder="First Name"
+                                    value={firstName}
+                                    onChange={(e) => setFirstName(e.target.value)}
+                                />
+                            </label>
+                            <label className="input input-bordered flex items-center gap-2">
+                                <input
+                                    type="text"
+                                    className="grow"
+                                    placeholder="Last Name"
+                                    value={lastName}
+                                    onChange={(e) => setLastName(e.target.value)}
+                                />
+                            </label>
+                        </>
+                    )}
+
                     <label className="input input-bordered flex items-center gap-2">
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -75,14 +112,18 @@ const Login = () => {
                             type="password"
                             className="grow"
                             value={password}
+                            placeholder="Password"
                             onChange={(e) => setPassword(e.target.value)}
                         />
                     </label>
                     <p className="text-red-500">{error}</p>
-                    <div className="card-actions justify-center">
-                        <button className="btn btn-primary" onClick={handleLogin}>
-                            Login
+                    <div className="card-actions justify-center flex-col items-center">
+                        <button className="btn btn-primary w-full" onClick={handleSubmit}>
+                            {isLogin ? "Login" : "Signup"}
                         </button>
+                        <p className="cursor-pointer underline mt-2" onClick={() => setIsLogin(!isLogin)}>
+                            {isLogin ? "New user? Signup here" : "Existing user? Login here"}
+                        </p>
                     </div>
                 </div>
             </div>
