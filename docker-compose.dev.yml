@@ -13,3 +13,11 @@ services:
     volumes:
       - ./frontend:/app
       - /app/node_modules
+
+  backend:
+    env_file:
+      - ./backend/.env
+
+  chat-service:
+    env_file:
+      - ./chat-service/.env
