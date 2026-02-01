@@ -54,6 +54,20 @@ resource "aws_security_group" "instance_sg" {
   }
 
   ingress {
+    from_port   = 3001
+    to_port     = 3001
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port   = 9090
+    to_port     = 9090
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
     from_port   = -1
     to_port     = -1
     protocol    = "icmp"

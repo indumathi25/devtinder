@@ -11,6 +11,22 @@ const userRouter = require('./routes/user');
 
 const app = express();
 
+// Initialize Prometheus monitoring
+const promBundle = require("express-prom-bundle");
+const metricsMiddleware = promBundle({
+  includeMethod: true,
+  includePath: true,
+  includeStatusCode: true,
+  normalizePath: [
+    ['^/chat/.*', '/chat/#id'],
+    ['^/request/.*', '/request/#id']
+  ],
+  promClient: {
+    collectDefaultMetrics: {}
+  }
+});
+app.use(metricsMiddleware);
+
 // Helmet middleware for security headers
 app.use(helmet());
 

@@ -6,6 +6,19 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 
 const app = express();
+
+// Initialize Prometheus monitoring
+const promBundle = require("express-prom-bundle");
+const metricsMiddleware = promBundle({
+  includeMethod: true,
+  includePath: true,
+  includeStatusCode: true,
+  promClient: {
+    collectDefaultMetrics: {}
+  }
+});
+app.use(metricsMiddleware);
+
 app.use(
   cors({
     // Allow localhost in dev, but in production we allow the request origin (true)
