@@ -1,8 +1,7 @@
 import { Provider } from 'react-redux';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { SWRConfig } from 'swr';
-import appStore from './utils/appStore';
-import fetcher from './utils/fetcher';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import appStore from './utils/appStore.js';
 import Body from './components/Body';
 import Login from './components/Login';
 import Feed from './components/Feed';
@@ -11,16 +10,19 @@ import Connections from './components/Connections';
 import Requests from './components/Requests';
 import Chat from './components/Chat';
 
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: false,
+    },
+  },
+});
+
 function App() {
   return (
     <Provider store={appStore}>
-      <SWRConfig
-        value={{
-          fetcher,
-          revalidateOnFocus: false, // Prevents multiple API calls when switching tabs during dev
-          shouldRetryOnError: false, // Optional: don't retry if backend fails
-        }}
-      >
+      <QueryClientProvider client={queryClient}>
         <BrowserRouter>
           <Routes>
             <Route path='/' element={<Body />}>
@@ -33,7 +35,7 @@ function App() {
             </Route>
           </Routes>
         </BrowserRouter>
-      </SWRConfig>
+      </QueryClientProvider>
     </Provider>
   );
 }

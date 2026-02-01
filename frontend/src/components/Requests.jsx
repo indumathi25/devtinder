@@ -1,22 +1,28 @@
-import useSWR from "swr";
-import axiosInstance from "../utils/axios";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "../utils/api";
 
 const Requests = () => {
-    const { data: requests, error, isLoading, mutate } = useSWR("/user/requests/received");
+    const queryClient = useQueryClient();
+    const { data: requests, error, isLoading } = useQuery({
+        queryKey: ["requests"],
+        queryFn: () => api.get("/user/requests/received"),
+    });
 
-    const reviewRequest = async (status, requestId) => {
-        try {
-            await axiosInstance.post(`/request/review/${status}/${requestId}`);
-            mutate();
-        } catch (err) {
-            console.error(err);
-        }
+    const mutation = useMutation({
+        mutationFn: ({ status, requestId }) => api.post(`/request/review/${status}/${requestId}`),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["requests"] });
+        },
+    });
+
+    const reviewRequest = (status, requestId) => {
+        mutation.mutate({ status, requestId });
     }
 
     if (error) return <div className="text-center mt-10">Failed to load requests</div>;
     if (isLoading) return <div className="text-center mt-10">Loading...</div>;
 
-    if (!requests || requests.length === 0) return <div className="text-center mt-10">No requests found</div>;
+    if (!Array.isArray(requests) || requests.length === 0) return <div className="text-center mt-10">No requests found</div>;
 
     return (
         <div className="flex flex-col items-center my-10">

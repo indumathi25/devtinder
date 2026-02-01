@@ -2,8 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { createSocketConnection } from '../utils/socket';
 import { useSelector } from 'react-redux';
-import useSWR from 'swr';
-import axiosInstance from '../utils/axios';
+import { useQuery } from '@tanstack/react-query';
+import { api } from '../utils/api';
 
 const Chat = () => {
   const { targetUserId } = useParams();
@@ -12,7 +12,11 @@ const Chat = () => {
   const user = useSelector((store) => store.user);
 
   // Fetch Chat History
-  const { data: chatData, isLoading } = useSWR(user ? `/chat/${targetUserId}` : null);
+  const { data: chatData, isLoading } = useQuery({
+    queryKey: ['chat', targetUserId],
+    queryFn: () => api.get(`/chat/${targetUserId}`),
+    enabled: !!user,
+  });
 
   useEffect(() => {
     if (chatData?.messages) {
