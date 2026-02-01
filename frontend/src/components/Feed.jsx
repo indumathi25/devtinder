@@ -1,21 +1,28 @@
-import axiosInstance from "../utils/axios";
-import useSWR from "swr";
+import { api } from "../utils/api";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 const Feed = () => {
-    const { data: feed, mutate } = useSWR("/feed");
+    const queryClient = useQueryClient();
+    const { data: feed, isLoading, isError, error } = useQuery({
+        queryKey: ["feed"],
+        queryFn: () => api.get("/feed"),
+    });
 
-    if (!feed) return <div className="text-center mt-10">Loading...</div>;
-    if (feed.length === 0) return <div className="text-center mt-10">No users found</div>;
+    const mutation = useMutation({
+        mutationFn: ({ status, userId }) => api.post(`/request/send/${status}/${userId}`),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["feed"] });
+        },
+    });
+
+    if (isLoading) return <div className="text-center mt-10">Loading...</div>;
+    if (isError) return <div className="text-center mt-10 text-red-500">Error: {error.message}</div>;
+    if (!Array.isArray(feed) || feed.length === 0) return <div className="text-center mt-10">No users found</div>;
 
     const user = feed[0];
 
-    const handleSendRequest = async (status) => {
-        try {
-            await axiosInstance.post(`/request/send/${status}/${user._id}`);
-            mutate(); // to get the fresh feed 
-        } catch (err) {
-            console.error(err);
-        }
+    const handleSendRequest = (status) => {
+        mutation.mutate({ status, userId: user._id });
     }
 
     return (

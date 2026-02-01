@@ -1,0 +1,15 @@
+# Local Development Configuration
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    ports:
+      - '5173:5173'
+    # Vite dev server with Hot Module Replacement
+    command: npm run dev -- --host
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules

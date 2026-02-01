@@ -3,8 +3,9 @@ services:
     build: ./backend
     ports:
       - '3000:3000'
+    env_file:
+      - ./backend/.env
     environment:
-      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
       - AWS_REGION=eu-west-1
       - NODE_ENV=production
     restart: always
@@ -16,6 +17,8 @@ services:
     build: ./chat-service
     ports:
       - '7777:7777'
+    env_file:
+      - ./chat-service/.env
     environment:
       - NODE_ENV=production
     restart: always

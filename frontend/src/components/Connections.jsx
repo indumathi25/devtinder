@@ -1,14 +1,18 @@
-import useSWR from 'swr';
+import { useQuery } from '@tanstack/react-query';
+import { api } from '../utils/api';
 import { Link } from 'react-router-dom';
 
 const Connections = () => {
-  const { data, error, isLoading } = useSWR('/user/connections');
+  const { data, error, isLoading } = useQuery({
+    queryKey: ['connections'],
+    queryFn: () => api.get('/user/connections'),
+  });
 
   if (error)
     return <div className='text-center mt-10'>Failed to load connections</div>;
   if (isLoading) return <div className='text-center mt-10'>Loading...</div>;
 
-  if (!data || data.length === 0)
+  if (!Array.isArray(data) || data.length === 0)
     return <div className='text-center mt-10'>No connections found</div>;
 
   return (

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import axiosInstance from "../utils/axios";
+import { api } from "../utils/api";
+import { useMutation } from "@tanstack/react-query";
 import { addUser } from "../utils/userSlice";
 
 const Profile = () => {
@@ -14,6 +15,18 @@ const Profile = () => {
     const [toast, setToast] = useState("");
     const dispatch = useDispatch();
 
+    const mutation = useMutation({
+        mutationFn: (data) => api.patch("/profile/edit", data),
+        onSuccess: (data) => {
+            dispatch(addUser(data.user || data)); // handle inconsistent backend returning wrap or direct user
+            setToast("Profile updated successfully");
+            setTimeout(() => setToast(""), 3000);
+        },
+        onError: (err) => {
+            setToast("Error updating profile: " + err.message);
+        }
+    });
+
     useEffect(() => {
         if (user) {
             setFirstName(user.firstName || "");
@@ -25,18 +38,8 @@ const Profile = () => {
         }
     }, [user]);
 
-    const handleSave = async () => {
-        try {
-            const res = await axiosInstance.patch("/profile/edit", {
-                firstName, lastName, photoUrl, age, gender, about
-            });
-            dispatch(addUser(res.data.user));
-            setToast("Profile updated successfully");
-            setTimeout(() => setToast(""), 3000);
-        } catch (err) {
-            const errorMsg = err.response?.data?.message || err.response?.data?.error || err.message;
-            setToast("Error updating profile: " + errorMsg);
-        }
+    const handleSave = () => {
+        mutation.mutate({ firstName, lastName, photoUrl, age, gender, about });
     }
 
     return (

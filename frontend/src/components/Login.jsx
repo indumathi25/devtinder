@@ -1,5 +1,6 @@
 import { useState } from "react";
-import axiosInstance from "../utils/axios";
+import { api } from "../utils/api";
+import { useMutation } from "@tanstack/react-query";
 import { useDispatch } from "react-redux";
 import { addUser } from "../utils/userSlice";
 import { useNavigate } from "react-router-dom";
@@ -11,19 +12,26 @@ const Login = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
-    const handleLogin = async () => {
-        try {
-            await axiosInstance.post("/login", {
-                email,
-                password,
-            });
-            // Fetch profile after login to update store
-            const res = await axiosInstance.get("/profile");
-            dispatch(addUser(res.data));
-            navigate("/");
-        } catch (err) {
-            setError(err.response?.data?.message || "Something went wrong");
-        }
+    const loginMutation = useMutation({
+        mutationFn: (credentials) => api.post("/login", credentials),
+        onSuccess: async () => {
+            try {
+                // Fetch profile after login to update store
+                const userData = await api.get("/profile");
+                dispatch(addUser(userData));
+                navigate("/");
+            } catch (err) {
+                setError("Login successful, but failed to load profile: " + err.message);
+            }
+        },
+        onError: (err) => {
+            setError(err.message || "Something went wrong");
+        },
+    });
+
+    const handleLogin = () => {
+        setError("");
+        loginMutation.mutate({ email, password });
     };
 
     return (

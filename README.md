@@ -1,75 +1,90 @@
 # Dev Tinder 🚀
 
-A full-stack application built with **React**, **Node.js**, and **Docker**, featuring a fully automated **CI/CD pipeline** on **AWS**.
+A full-stack application built with a **Microservices Architecture**, featuring automated **CI/CD** on **AWS** and industry-standard **Asymmetric (RS256) Security**.
 
 ---
 
-## 🛠 Tech Stack
+## 🏗 Architecture & Tech Stack
 
-- **Frontend**: React, Vite, Tailwind CSS, DaisyUI, Redux Toolkit, SWR.
-- **Backend**: Node.js, Express, MongoDB.
-- **Infrastructure**: Docker, Terraform, GitHub Actions, AWS EC2, S3 (State Management).
+### Services
+- **Frontend**: React (Vite) + Nginx (serving static files & reverse proxy).
+- **Backend (Auth/API)**: Node.js/Express (Handles authentication, profiles, and user management).
+- **Chat Service**: Node.js/Socket.io microservice (Handles real-time messaging).
+
+### Infrastructure
+- **Cloud**: AWS (EC2, Secrets Manager, S3).
+- **Security**: RS256 Asymmetric JWT, CORS (Dynamic), Helmet.
+- **IaC**: Terraform (VPC, Security Groups, EC2, IAM).
+- **CI/CD**: GitHub Actions (Automated infrastructure & secret provisioning).
 
 ---
 
-## � Fully Automated Deployment (CI/CD)
+## 🔒 Security & Authentication
 
-The project is designed to be **"Push to Deploy."** Once configured, you never need to run `terraform apply` or `ssh` manually. GitHub does it all.
+The project uses the **Zero-State Secret Pattern**:
 
-### Step 1: Initial AWS Setup (One-Time)
+1.  **Asymmetric Signing**: Access Tokens are signed by the **Backend** using an RSA Private Key and verified by **all microservices** using a Public Key.
+2.  **AWS Secrets Manager**: Sensitive credentials (JWT Keys, Mongo URI) are stored in a consolidated JSON secret at runtime.
+3.  **Automated Vaulting**: Secrets are pushed directly from GitHub to AWS via CLI, ensuring they **never** appear in plain-text Terraform state files (S3).
+4.  **Hardened Cookies**: Uses `HttpOnly`, `SameSite=Lax`, and `Secure` attributes for session protection.
 
-1.  **S3 Bucket**: Create a private S3 bucket in AWS (e.g., `devtinder-state-bucket`).
-2.  **Enable Remote State**: In `terraform/main.tf`, uncomment the `backend "s3"` block and update the `bucket` name to your bucket name.
-3.  **Local Sync**: Run this once from your laptop to move your current server record to the cloud:
-    ```bash
-    cd terraform
-    terraform init
-    ```
+---
+
+## 🚀 Deployment Guide (CI/CD)
+
+The project is designed for **"Push to Deploy"** directly to AWS EC2.
+
+### Step 1: Generate RSA Keys (Local)
+Run these commands to generate the key pair for JWT signing:
+```bash
+# Private Key
+ssh-keygen -t rsa -b 2048 -m PEM -f jwtRS256.key
+# Public Key
+openssl rsa -in jwtRS256.key -pubout -outform PEM -out jwtRS256.key.pub
+```
 
 ### Step 2: Configure GitHub Secrets
+Go to **Settings -> Secrets -> Actions** and add:
 
-Go to your Repo -> **Settings** -> **Secrets and variables** -> **Actions** and add:
-
-| Secret Name | Value |
+| Secret Name | Description |
 | :--- | :--- |
-| `AWS_ACCESS_KEY_ID` | Your IAM Access Key |
-| `AWS_SECRET_ACCESS_KEY` | Your IAM Secret Key |
-| `EC2_SSH_KEY` | Content of `~/.ssh/id_rsa` (Private Key) |
-| `EC2_PUBLIC_KEY` | Content of `~/.ssh/id_rsa.pub` (Public Key) |
+| `AWS_ACCESS_KEY_ID` | AWS Credentials |
+| `AWS_SECRET_ACCESS_KEY` | AWS Credentials |
+| `JWT_PRIVATE_KEY` | Content of `jwtRS256.key` |
+| `JWT_PUBLIC_KEY` | Content of `jwtRS256.key.pub` |
+| `MONGO_URI` | `mongodb+srv://...net/devTinder` (Include Database name!) |
+| `EC2_SSH_KEY` | Your EC2 private key for SSH |
+| `EC2_PUBLIC_KEY` | Your EC2 public key for SSH |
 
-### Step 3: Trigger Deployment
+### Step 3: Global IP Whitelisting (MongoDB Atlas)
+1.  Allocate an **Elastic IP** in AWS and associate it with your EC2 instance.
+2.  In MongoDB Atlas -> Network Access, add your **Elastic IP** to the whitelist.
 
-Simply push your code:
-```bash
-git add .
-git commit -m "New feature"
-git push origin main
-```
-
-**What happens?**
-- GitHub Actions wakes up.
-- It runs **Terraform** to ensure the EC2 server exists and is configured correctly.
-- It dynamically retrieves the server IP.
-- It **SSHs** into the server, pulls the latest code, and restarts the **Docker** containers.
+### Step 4: Deploy
+Simply push to the `main` branch. GitHub will handle the infrastructure, update the secrets vault, and restart the containers.
 
 ---
 
-## � Local Development
+## 🔧 Running Locally
 
-If you want to run things on your laptop:
-
-### Using Docker (Recommended)
 ```bash
+# Using Docker
 docker-compose up --build
+
+# Backend accessible at http://localhost:3000
+# Chat accessible at http://localhost:7777 (via /api/chat proxy on localhost:80)
 ```
-*Accessible at `http://localhost:80`*
 
 ---
 
-## 🔧 Troubleshooting
+## 📝 Diagnostic Commands (on EC2)
 
-### Mongoose Connection / 502 Error
-If the server starts but can't talk to the database:
-- **Reason**: MongoDB Atlas IP whitelist.
-- **Fix**: Go to MongoDB Atlas -> Network Access -> Add your AWS Server IP.
-- **Restart**: Push any small change to GitHub to trigger a fresh automated deployment.
+```bash
+cd ~/app
+# View real-time logs for all services
+docker compose logs -f
+
+# Check if services are hitting the correct database
+docker compose logs backend | grep "Database:"
+docker compose logs chat-service | grep "Database:"
+```
