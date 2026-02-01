@@ -3,6 +3,9 @@ services:
     build: ./backend
     ports:
       - '3000:3000'
+    env_file:
+      - path: ./backend/.env
+        required: false
     environment:
       - AWS_REGION=eu-west-1
       - NODE_ENV=production
@@ -15,6 +18,9 @@ services:
     build: ./chat-service
     ports:
       - '7777:7777'
+    env_file:
+      - path: ./chat-service/.env
+        required: false
     environment:
       - NODE_ENV=production
     restart: always

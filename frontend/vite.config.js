@@ -20,7 +20,7 @@ export default defineConfig(({ mode }) => {
         '/api/chat': {
           target: 'http://chat-service:7777', // Chat microservice
           changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api/, ''),
+          rewrite: (path) => path.replace(/^\/api\/chat/, ''),
         },
         '/api': {
           target: target, // Main backend

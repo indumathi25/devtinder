@@ -9,7 +9,7 @@ let cachedSecrets = null;
 const fetchSecrets = async () => {
     if (cachedSecrets) return cachedSecrets;
 
-    const secretName = "devtinder/secrets"; // Consolidated secret name
+    const secretName = "devtinder/secrets";
 
     try {
         const response = await client.send(
@@ -25,38 +25,39 @@ const fetchSecrets = async () => {
                 console.log(`Successfully retrieved secrets from AWS. Keys found: ${Object.keys(cachedSecrets).join(', ')}`);
                 return cachedSecrets;
             } catch (parseError) {
-                console.error("CRITICAL: Failed to parse secrets JSON from AWS Secrets Manager. Ensure the secret is a valid Key/Value (JSON) object.");
+                console.error("CRITICAL: Failed to parse secrets JSON from AWS Secrets Manager.");
                 throw parseError;
             }
         }
     } catch (error) {
-        console.error("Error fetching secrets from AWS Secrets Manager:", error);
+        console.warn("Notice: AWS Secrets Manager unreachable. This is normal during local development.");
         return null;
     }
 };
 
 const getJWTPrivateKey = async () => {
     const secrets = await fetchSecrets();
-    if (!secrets?.JWT_PRIVATE_KEY) {
-        console.warn("WARN: JWT_PRIVATE_KEY not found in AWS Secrets Manager, falling back to environment variable.");
-    }
-    return secrets?.JWT_PRIVATE_KEY || process.env.JWT_PRIVATE_KEY;
+    const key = secrets?.JWT_PRIVATE_KEY || process.env.JWT_PRIVATE_KEY;
+    if (!key) console.warn("WARN: JWT_PRIVATE_KEY not found.");
+    return key;
 };
 
 const getJWTPublicKey = async () => {
     const secrets = await fetchSecrets();
-    if (!secrets?.JWT_PUBLIC_KEY) {
-        console.warn("WARN: JWT_PUBLIC_KEY not found in AWS Secrets Manager, falling back to environment variable.");
-    }
-    return secrets?.JWT_PUBLIC_KEY || process.env.JWT_PUBLIC_KEY;
+    const key = secrets?.JWT_PUBLIC_KEY || process.env.JWT_PUBLIC_KEY;
+    if (!key) console.warn("WARN: JWT_PUBLIC_KEY not found.");
+    return key;
 };
 
 const getMongoURI = async () => {
     const secrets = await fetchSecrets();
-    if (!secrets?.MONGO_URI) {
-        console.warn("WARN: MONGO_URI not found in AWS Secrets Manager, falling back to environment variable.");
+    const uri = secrets?.MONGO_URI || process.env.MONGO_URI;
+    if (!uri) {
+        console.error("CRITICAL: MONGO_URI is missing from both AWS and Environment.");
+    } else {
+        console.log("MONGO_URI found successfully.");
     }
-    return secrets?.MONGO_URI || process.env.MONGO_URI;
+    return uri;
 };
 
 module.exports = { getJWTPrivateKey, getJWTPublicKey, getMongoURI };

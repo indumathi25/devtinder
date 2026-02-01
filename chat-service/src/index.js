@@ -16,6 +16,9 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
+const chatRouter = require('./routes/chat');
+app.use('/', chatRouter);
+
 
 const server = http.createServer(app);
 
